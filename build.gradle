@@ -1,0 +1,57 @@
+plugins {
+    id 'java'
+}
+
+group 'plugin'
+version '1.0'
+
+repositories {
+    mavenCentral()
+    maven { url 'https://jitpack.io' }
+    maven { url 'https://repo.spongepowered.org/repository/maven-public/' }
+}
+
+ext {
+    mindustryVersion = 'v145.1'
+}
+
+dependencies {
+    compileOnly "com.github.Anuken.Arc:arc-core:$mindustryVersion"
+    compileOnly "com.github.Anuken.Mindustry:core:$mindustryVersion"
+    compileOnly "com.github.Anuken.Mindustry:server:$mindustryVersion"
+
+    /**Discord API**/
+    implementation "org.javacord:javacord:3.7.0"
+
+    /**JSON Parser**/
+    implementation group: 'com.googlecode.json-simple', name: 'json-simple', version: '1.1.1'
+
+    /**Database**/
+    implementation "org.mongodb:mongodb-driver-sync:4.10.1"
+    implementation "org.mongodb:mongodb-driver-core:4.10.1"
+    implementation "org.mongodb:bson:4.10.1"
+}
+
+configurations.all {
+    resolutionStrategy.eachDependency { details ->
+        if(details.requested.group == 'com.github.Anuken.Arc') details.useVersion "$mindustryVersion"
+    }
+}
+
+
+tasks.withType(JavaCompile) {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+    options.encoding = 'UTF-8'
+}
+
+jar {
+    exclude 'META-INF/*.RSA', 'META-INF/*.SF','META-INF/*.DSA'
+
+    duplicatesStrategy=DuplicatesStrategy.EXCLUDE
+
+    archiveFileName = "Plugin.jar"
+
+    from configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+}
+

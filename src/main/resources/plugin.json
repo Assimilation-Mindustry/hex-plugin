@@ -1,0 +1,8 @@
+{
+  "name": "PluginTemplate",
+  "displayName:": "PluginTemplate",
+  "description": "A plugin template",
+  "author": "TheRadioactiveBanana",
+  "main": "plugin.PluginTemplate",
+  "version": "1.0"
+}
