@@ -1,8 +1,8 @@
 {
-  "name": "PluginTemplate",
-  "displayName:": "PluginTemplate",
-  "description": "A plugin template",
-  "author": "TheRadioactiveBanana",
-  "main": "plugin.PluginTemplate",
+  "name": "AssimilationPlugin",
+  "displayName:": "Assimilation Plugin",
+  "description": "A plugin for assimilation hex",
+  "author": "MarvinTMB",
+  "main": "assimilation.AssimilationPlugin",
   "version": "1.0"
 }
