@@ -7,6 +7,7 @@ import arc.struct.IntSeq;
 import arc.struct.Seq;
 import arc.util.Nullable;
 import arc.util.Timekeeper;
+import assimilation.AssimilationPlugin;
 import mindustry.game.Team;
 import mindustry.gen.Groups;
 import mindustry.gen.Player;
@@ -128,7 +129,7 @@ public class HexData{
         public @Nullable Hex location;
         public float progressPercent;
         public boolean lastCaptured;
-        public Timekeeper lastMessage = new Timekeeper(HexedMod.messageTime);
+        public Timekeeper lastMessage = new Timekeeper(AssimilationPlugin.messageTime);
     }
 
     public static class HexCaptureEvent{

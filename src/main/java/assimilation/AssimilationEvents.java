@@ -1,14 +1,14 @@
-package assimilation;
+/*package assimilation;
 
 import arc.Core;
 import arc.Events;
 import arc.struct.Seq;
-import assimilation.AssimilationPlugin;
 import assimilation.hex.Hex;
 import mindustry.content.Items;
 import mindustry.game.EventType;
 import mindustry.game.Team;
 import mindustry.gen.Call;
+import mindustry.gen.Player;
 import mindustry.type.ItemStack;
 
 import static mindustry.Vars.state;
@@ -78,4 +78,29 @@ public class AssimilationEvents {
             data.data(event.player).lastMessage.reset();
         });
     }
-}
+
+    private static void loadout(Player player, int x, int y){
+        Stile coreTile = start.tiles.find(s -> s.block instanceof CoreBlock);
+        if(coreTile == null) throw new IllegalArgumentException("Schematic has no core tile. Exiting.");
+        int ox = x - coreTile.x, oy = y - coreTile.y;
+        start.tiles.each(st -> {
+            Tile tile = world.tile(st.x + ox, st.y + oy);
+            if(tile == null) return;
+
+            if(tile.block() != Blocks.air){
+                tile.removeNet();
+            }
+
+            tile.setNet(st.block, player.team(), st.rotation);
+
+            if(st.config != null){
+                tile.build.configureAny(st.config);
+            }
+            if(tile.block() instanceof CoreBlock){
+                for(ItemStack stack : state.rules.loadout){
+                    Call.setItem(tile.build, stack.item, stack.amount);
+                }
+            }
+        });
+    }
+}*/

@@ -1,4 +1,4 @@
-package assimilation.database;
+package assimilation;
 
 public class Database {
     public static void connect() {
