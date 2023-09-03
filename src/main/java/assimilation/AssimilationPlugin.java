@@ -139,24 +139,36 @@ public class AssimilationPlugin extends Plugin implements ApplicationListener {
         Events.on(PlayerJoin.class, event -> {
             if(!active() || event.player.team() == Team.derelict) return;
 
-            Call.infoMessage(event.player.con, "HELLO AND WELCOME");
+            // Find a viable hex furthest from the center
 
-            Seq<Hex> copy = data.hexes().copy();
-            copy.shuffle();
-            Hex hex = copy.find(h -> h.controller == null && h.spawnTime.get());
+            Seq<Hex> hexes = data.hexes().copy();
 
+            Hex bestHex = null;
+            int bestRange = 0;
 
+            for (Hex hex : hexes) {
+                
+                if (hex.controller != null) continue;
+                if (!hex.spawnTime.get()) continue;
 
+                int range = Utils.rangeXY(hex.x, hex.y, Map.size / 2, Map.size / 2);
+                if (range < bestRange) continue;
+                
+                bestHex = hex;
+                bestRange = range;
+            }
 
-            if(hex != null){
-                loadout(event.player, hex.x, hex.y);
-                Core.app.post(() -> data.data(event.player).chosen = false);
-                hex.findController();
-            }else{
-                Call.infoMessage(event.player.con, "There are currently no empty hex spaces available.\nAssigning into spectator mode.");
+            if (bestHex == null) {
+
+                Call.infoMessage(event.player.con, "There are currently no viable hexes available.\nAssigning into spectator mode.");
                 event.player.unit().kill();
                 event.player.team(Team.derelict);
+                return;
             }
+
+            loadout(event.player, bestHex.x, bestHex.y);
+            Core.app.post(() -> data.data(event.player).chosen = false);
+            bestHex.findController();
 
             data.data(event.player).lastMessage.reset();
         });
@@ -192,7 +204,7 @@ public class AssimilationPlugin extends Plugin implements ApplicationListener {
 
         serverName.set("[purple]Assimilation [grey]> [red]Hex [grey]> [white]Serpulo");
         desc.set("Conquer every [purple]hex [grey]on the map");
-        motd.set("Welcome to [red]Assimilation!\n [white]your goal is to convert all cores under your control. Good Luck.");
+        motd.set("Welcome to [red]Assimilation!\n[white]your goal is to convert all cores under your control. Good Luck.");
         allowCustomClients.set(true);
         interactRateLimit.set(100);
         messageRateLimit.set(50);

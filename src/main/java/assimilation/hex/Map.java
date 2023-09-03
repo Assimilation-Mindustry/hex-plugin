@@ -25,7 +25,7 @@ import static mindustry.Vars.maps;
 import static mindustry.Vars.state;
 
 public class Map implements Cons<Tiles> {
-    public int size = Hex.size, height = Hex.size;
+    public static int size = Hex.size, height = Hex.size;
     public int center = size / 2;
 
     // 5x6
