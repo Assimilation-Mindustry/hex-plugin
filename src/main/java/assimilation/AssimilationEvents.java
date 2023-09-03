@@ -1,4 +1,4 @@
-/*package assimilation;
+package assimilation;
 
 import arc.Core;
 import arc.Events;
@@ -28,79 +28,9 @@ public class AssimilationEvents {
         Events.on(EventType.PlayEvent.class, event -> {
             AssimilationPlugin.info("start set rules");
 
-            state.rules.pvp = true;
-            state.rules.tags.put("hexed", "true");
-            //state.rules.canGameOver = false;
-            state.rules.polygonCoreProtection = true;
-            state.rules.loadout = ItemStack.list(Items.copper, 1000, Items.lead, 1000, Items.graphite, 150, Items.metaglass, 150, Items.silicon, 150, Items.plastanium, 0);
-            state.rules.buildSpeedMultiplier = 1f / 2f;
-            state.rules.blockHealthMultiplier = .5f;
-            state.rules.unitBuildSpeedMultiplier = 1f;
-            state.rules.unitDamageMultiplier = .5f;
-            state.rules.blockDamageMultiplier = .5f;
-            state.rules.coreIncinerates = true;
-            state.rules.damageExplosions = false;
-            state.rules.disableOutsideArea = false;
-            state.rules.dragMultiplier = .0f;
-            state.rules.enemyCoreBuildRadius = .100f;
-            state.rules.ghostBlocks = true;
-            state.rules.hideBannedBlocks = true;
-            state.rules.logicUnitBuild = false;
-            state.rules.mission = "HELLO MISSION";
-            state.rules.modeName = "THE CURRENT MODE";
-            // state.rules.onlyDepositCore = true;
-            state.rules.reactorExplosions = false;
-            state.rules.unitCap = 24;
-            state.rules.unitCrashDamageMultiplier = .0f;
-            state.rules.unitCapVariable = true;
-            // state.rules.bannedBlocks = new ObjectSet<>("");
+            // set rules
 
             AssimilationPlugin.info("end set rules");
         });
-
-        Events.on(EventType.PlayerJoin.class, event -> {
-            if(event.player.team() == Team.derelict) return;
-
-            Seq<Hex> copy = data.hexes().copy();
-            copy.shuffle();
-            Hex hex = copy.find(h -> h.controller == null && h.spawnTime.get());
-
-            if(hex != null){
-                loadout(event.player, hex.x, hex.y);
-                Core.app.post(() -> data.data(event.player).chosen = false);
-                hex.findController();
-            }else{
-                Call.infoMessage(event.player.con, "There are currently no empty hex spaces available.\nAssigning into spectator mode.");
-                event.player.unit().kill();
-                event.player.team(Team.derelict);
-            }
-
-            data.data(event.player).lastMessage.reset();
-        });
     }
-
-    private static void loadout(Player player, int x, int y){
-        Stile coreTile = start.tiles.find(s -> s.block instanceof CoreBlock);
-        if(coreTile == null) throw new IllegalArgumentException("Schematic has no core tile. Exiting.");
-        int ox = x - coreTile.x, oy = y - coreTile.y;
-        start.tiles.each(st -> {
-            Tile tile = world.tile(st.x + ox, st.y + oy);
-            if(tile == null) return;
-
-            if(tile.block() != Blocks.air){
-                tile.removeNet();
-            }
-
-            tile.setNet(st.block, player.team(), st.rotation);
-
-            if(st.config != null){
-                tile.build.configureAny(st.config);
-            }
-            if(tile.block() instanceof CoreBlock){
-                for(ItemStack stack : state.rules.loadout){
-                    Call.setItem(tile.build, stack.item, stack.amount);
-                }
-            }
-        });
-    }
-}*/
+}

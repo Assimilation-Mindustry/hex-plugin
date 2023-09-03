@@ -18,10 +18,10 @@ import static mindustry.Vars.*;
 public class Hex{
     private float[] progress = new float[256];
 
-    public final static int size = 516;
-    public final static int diameter = 74;
+    public final static int size = 695;
+    public final static int diameter = 80;
     public final static int radius = diameter / 2;
-    public final static int spacing = 78;
+    public final static int spacing = diameter + 10;
     public final static int itemRequirement = 210;
 
     public final int id;

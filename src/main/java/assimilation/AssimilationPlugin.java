@@ -6,7 +6,7 @@ import arc.struct.*;
 import arc.util.*;
 import assimilation.hex.HexData;
 import assimilation.hex.Hex;
-import assimilation.hex.MapGenerator;
+import assimilation.hex.Map;
 import mindustry.content.*;
 import mindustry.core.GameState.*;
 import mindustry.core.NetServer.*;
@@ -23,6 +23,7 @@ import mindustry.world.blocks.storage.*;
 
 import static arc.util.Log.*;
 import static mindustry.Vars.*;
+import static mindustry.net.Administration.Config.*;
 
 public class AssimilationPlugin extends Plugin implements ApplicationListener {
     //in seconds
@@ -50,28 +51,19 @@ public class AssimilationPlugin extends Plugin implements ApplicationListener {
     private HexData data;
     private boolean restarting = false, registered = false;
 
-    private Schematic start;
+    private Schematic coreNucleus;
+    private Schematic coreShard;
     private double counter = 0f;
     private int lastMin;
 
     @Override
-    public void init(){
-        rules.pvp = true;
-        rules.tags.put("hexed", "true");
-        rules.canGameOver = false;
-        rules.polygonCoreProtection = true;
+    public void init() {
 
-        //for further configuration, use `ruless add <name> <value...>`
-        /*
-        rules.loadout = ItemStack.list(Items.copper, 300, Items.lead, 500, Items.graphite, 150, Items.metaglass, 150, Items.silicon, 150, Items.plastanium, 50);
-        rules.buildCostMultiplier = 1f;
-        rules.buildSpeedMultiplier = 1f / 2f;
-        rules.blockHealthMultiplier = 1.2f;
-        rules.unitBuildSpeedMultiplier = 1f;
-        rules.unitDamageMultiplier = 1.1f;
-        */
+        AssimilationEvents.init();
+        this.config();
 
-        start = Schematics.readBase64("bXNjaAB4nE2SgY7CIAyGC2yDsXkXH2Tvcq+AkzMmc1tQz/j210JpXDL8hu3/lxYY4FtBs4ZbBLvG1ync4wGO87bvMU2vsCzTEtIlwvCxBW7e1r/43hKYkGY4nFN4XqbfMD+29IbhvmHOtIc1LjCmuIcrfm3X9QH2PofHIyYY5y3FaX3OS3ze4fiRwX7dLa5nDHTPddkCkT3l1DcA/OALihZNq4H6NHnV+HZCVshJXA9VYZC9kfVU+VQGKSsbjVT1lOgp1qO4rGIo9yvnquxH1ORIohap6HVIDbtpaNlDi4cWD80eFJdrNhbJc8W61Jzdqi/3wrRIRii7GYdelvWMZDQs1kNbqtYe9/KuGvDX5zD6d5SML66+5dwRqXgQee5GK3Edxw1ITfb3SJ71OomzUAdjuWsWqZyJavd8Issdb5BqVbaoGCVzJqrddaUGTWSFHPs67m6H5HlaTqbqpFc91Kfn+2eQSp9pr96/Xtx6cevZjeKKDuUOklvvXy9uPGdNZFjZi7IXZS/n8Hyf/wFbjj/q");
+        coreNucleus = Schematics.readBase64("bXNjaAF4nE2T7W6bQBBFBzDsFwbnDfoCPFHUHwRvK0sELGw3yatXqtydPVZrLHFgdvbemWEtQV4q2S3je5R2Wrf4bblNc7xdJBzjZdpO5+tpXUSkmce3OF+kfP3eSpjW8zluw8c4z2KndfkVv9ZNqnGbxFym8XqNmzTvcTkm+vP6kXKX9RjFvOW1L7G3ZV5HXc6uwz/XyzqP23AelzjLy9PLkJ5+RgnjaRt+jNN1TSIin/L/KkAJKgINMMACBzyZe9CBHhyeFAseCqQLlVbsQE1CAwywwAFPZgAt2IMO9ODw1EGptmX+JctSbXcJNZU0wAALHEh+dUKwVR5Eo2r331mkRbLDoAeHx8BAoVPT3CReSZ39bBK0BALLHck9yAo73epykamEWgcUElqdXlHoQkda3lSTXdNuTbAh2GhQ0RHMa4YCDQUaxqIVpZvRsShCzRcy2qlmdex5KOQ6LUKW+VoV0u5qHdf9TxpUer/fc9epEIUBFjjgpdwlBEQ6JHuQfRw+juPjaNQxaMfxcXxOh5HDyGHkMHJqpJmBDS3Ygw70INs+jrXH1mPr+UN4jDxGHiOPkSfXI+2R9kh7lf4L0oNLfA==");
+        coreShard = Schematics.readBase64("bXNjaAF4nE2SXW7CMBAGNyT+2w136AU4UdUHA5aKFCAKSG2fevWyGSqBhCZZ+Rt7s5atbHsZLvXcRA/Xpb3dPutyFDu222E5zffT9SIicar7Nt1k8/4RxQ7XeW7L7qtOk9jtOtVlN9dLmyTPdXkU67fEc7sc2yJpX+/3tvwg3yEX+X38pZP1twE9KECBvazreOgIdAQ6GUAACWRQgIKnbHzZdONON25AT3EAAUSQQAYFKDAwvjTSo+5d7eKeYgARJJZkUCgqMLA6B3ofXPYYl1u88wgSxcxbYaWC1RKIB9oOfhZ3DP4csQQaC8QD8UA8koue6x4YQKZYwBpIbJQIJALJA37KTLGAZ2DdIZPLzCF7zr/KwFsAkWJiCpmAAnu5OwVZQVY4RGGohQEUBlAYQMFS/i3rJ3/eQEWmdKSMUZEpMkWm3BBlDuqncShFA6vaUBtqQ22oDbWhNpxGt0aHhtPwGM4R2YhsRDYSGAmMHvgD2Y4p3g==");
 
         Events.run(Trigger.update, () -> {
             if(active()){
@@ -147,9 +139,14 @@ public class AssimilationPlugin extends Plugin implements ApplicationListener {
         Events.on(PlayerJoin.class, event -> {
             if(!active() || event.player.team() == Team.derelict) return;
 
+            Call.infoMessage(event.player.con, "HELLO AND WELCOME");
+
             Seq<Hex> copy = data.hexes().copy();
             copy.shuffle();
             Hex hex = copy.find(h -> h.controller == null && h.spawnTime.get());
+
+
+
 
             if(hex != null){
                 loadout(event.player, hex.x, hex.y);
@@ -190,6 +187,20 @@ public class AssimilationPlugin extends Plugin implements ApplicationListener {
         };
     }
 
+    public void config() {
+        info("config");
+
+        serverName.set("[purple]Assimilation [grey]> [red]Hex [grey]> [white]Serpulo");
+        desc.set("Conquer every [purple]hex [grey]on the map");
+        motd.set("Welcome to [red]Assimilation!\n [white]your goal is to convert all cores under your control. Good Luck.");
+        allowCustomClients.set(true);
+        interactRateLimit.set(100);
+        messageRateLimit.set(50);
+        antiSpam.set(true);
+
+
+    }
+
     void updateText(Player player){
         HexData.HexTeam team = data.data(player);
 
@@ -214,6 +225,41 @@ public class AssimilationPlugin extends Plugin implements ApplicationListener {
         Call.setHudText(player.con, message.toString());
     }
 
+    private void setRules() {
+
+        state.rules.pvp = true;
+        state.rules.tags.put("hexed", "true");
+        state.rules.canGameOver = false;
+        state.rules.polygonCoreProtection = true;
+        state.rules.loadout = ItemStack.list(Items.copper, 1000, Items.lead, 1000, Items.graphite, 150, Items.metaglass, 150, Items.silicon, 150, Items.plastanium, 0);
+        state.rules.buildSpeedMultiplier = 1.5f;
+        state.rules.unitDamageMultiplier = .5f;
+        state.rules.unitHealthMultiplier = .5f;
+        state.rules.blockDamageMultiplier = .5f;
+        state.rules.blockHealthMultiplier = 1f;
+        state.rules.coreIncinerates = true;
+        state.rules.damageExplosions = false;
+        state.rules.disableOutsideArea = false;
+        state.rules.enemyCoreBuildRadius = .100f;
+        state.rules.ghostBlocks = true;
+        state.rules.hideBannedBlocks = true;
+        state.rules.logicUnitBuild = false;
+        state.rules.mission = "Capture every hex";
+        state.rules.modeName = "Assimilate";
+        // state.rules.onlyDepositCore = true;
+        state.rules.reactorExplosions = false;
+        state.rules.unitCap = 24;
+        state.rules.unitCrashDamageMultiplier = .0f;
+        state.rules.unitCapVariable = true;
+        // state.rules.bannedBlocks = new ObjectSet<>("");
+        state.rules.coreCapture = true;
+        state.rules.pvpAutoPause = false;
+
+        // temp
+
+        state.rules.borderDarkness = false;
+    }
+
     @Override
     public void registerServerCommands(CommandHandler handler){
         handler.register("hexed", "Begin hosting with the Hexed gamemode.", args -> {
@@ -226,11 +272,12 @@ public class AssimilationPlugin extends Plugin implements ApplicationListener {
 
             logic.reset();
             Log.info("Generating map...");
-            MapGenerator generator = new MapGenerator();
+            Map generator = new Map();
             world.loadGenerator(Hex.size, Hex.size, generator);
             data.initHexes(generator.getHex());
             info("Map generated.");
-            state.rules = rules.copy();
+//            state.rules = rules.copy();
+            this.setRules();
             logic.play();
             netServer.openServer();
         });
@@ -347,10 +394,10 @@ public class AssimilationPlugin extends Plugin implements ApplicationListener {
     }
 
     void loadout(Player player, int x, int y){
-        Stile coreTile = start.tiles.find(s -> s.block instanceof CoreBlock);
+        Stile coreTile = coreNucleus.tiles.find(s -> s.block instanceof CoreBlock);
         if(coreTile == null) throw new IllegalArgumentException("Schematic has no core tile. Exiting.");
         int ox = x - coreTile.x, oy = y - coreTile.y;
-        start.tiles.each(st -> {
+        coreNucleus.tiles.each(st -> {
             Tile tile = world.tile(st.x + ox, st.y + oy);
             if(tile == null) return;
 
@@ -374,6 +421,12 @@ public class AssimilationPlugin extends Plugin implements ApplicationListener {
     public boolean active(){
         return state.rules.tags.getBool("hexed") && !state.is(State.menu);
     }
+    public static void info(String text, Object... values) {
 
+        Log.infoTag("info", format(text, values));
+    }
+    public static void error(String text, Object... values) {
 
+        Log.errTag("error", format(text, values));
+    }
 }
