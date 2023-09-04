@@ -1,6 +1,10 @@
 package assimilation.utils;
 
+import arc.util.Log;
+
 import java.lang.reflect.Array;
+
+import static arc.util.Log.format;
 
 public class Utils {
     public static int rangeXY(int x1, int y1, int x2, int y2) {
@@ -17,5 +21,14 @@ public class Utils {
     public static int randomIntRange(int min, int max) {
 
         return (int) Math.floor(Math.random() * (max - min) + min);
+    }
+
+    public static void info(String text, Object... values) {
+
+        Log.infoTag("info", format(text, values));
+    }
+    public static void error(String text, Object... values) {
+
+        Log.errTag("error", format(text, values));
     }
 }

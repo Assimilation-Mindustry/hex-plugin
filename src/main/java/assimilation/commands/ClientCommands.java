@@ -2,6 +2,7 @@ package assimilation.commands;
 
 import arc.math.Mathf;
 import arc.util.CommandHandler.CommandRunner;
+import arc.util.Log;
 import arc.util.Time;
 import assimilation.AssimilationPlugin;
 import assimilation.UI;
@@ -12,9 +13,10 @@ import mindustry.game.Teams;
 import mindustry.gen.Call;
 import mindustry.gen.Player;
 import mindustry.world.Tile;
+import assimilation.utils.GameUtils;
 
 import static assimilation.PluginVars.clientCommands;
-import static assimilation.utils.GameUtils.killTiles;
+import static assimilation.PluginVars.serverCommands;
 import static mindustry.Vars.state;
 import static mindustry.Vars.world;
 
@@ -43,28 +45,31 @@ public class ClientCommands {
             player.sendMessage("Made you invindible");
         });
 
-        registerCommand("die", "commits die", (args, player) -> {
+        registerCommand("die", "surrender all of your hexes to the Terran faction", (args, player) -> {
 
+            if(player.team() == Team.green){
+                player.sendMessage("[scarlet]You're already terran.");
+                return;
+            }
+
+            GameUtils.killTiles(player.team(), hexData);
             player.unit().kill();
-            player.sendMessage("you died");
         });
 
         registerCommand("spectate", "Enter spectator mode. This destroys your base.", (args, player) -> {
-            if(player.team() == Team.derelict){
-                player.sendMessage("[scarlet]You're already spectating.");
-            }else{
-                killTiles(player.team(), hexData);
-                player.unit().kill();
-                player.team(Team.derelict);
+            if(player.team() == Team.green){
+                player.sendMessage("[scarlet]You're already terran.");
+                return;
             }
+
+            GameUtils.killTiles(player.team(), hexData);
+            player.unit().kill();
+            player.team(Team.green);
         });
 
-        registerCommand("captured", "Dispay the number of hexes you have captured.", (args, player) -> {
-            if(player.team() == Team.derelict){
-                player.sendMessage("[scarlet]You're spectating.");
-            }else{
-                player.sendMessage("[lightgray]You've captured[accent] " + hexData.getControlled(player).size + "[] hexes.");
-            }
+        registerCommand("hexes", "Dispay the number of hexes you have captured.", (args, player) -> {
+
+            player.sendMessage("[lightgray]Your team has captured[accent] " + hexData.getControlled(player).size + "[] hexes.");
         });
 
         registerCommand("leaderboard", "Display the leaderboard", (args, player) -> {
@@ -87,6 +92,10 @@ public class ClientCommands {
             }else{
                 player.sendMessage("[scarlet]No hex found.");
             }
+        });
+
+        registerCommand("time", "Get the time the ground has gone for.", (args, player) -> {
+            player.sendMessage("Time round has gone for: " + ((AssimilationPlugin.roundTime) / 60 / 60) + " minutes");
         });
     }
 
