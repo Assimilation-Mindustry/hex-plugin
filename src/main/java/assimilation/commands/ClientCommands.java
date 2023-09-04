@@ -22,7 +22,7 @@ import static mindustry.Vars.world;
 
 public class ClientCommands {
 
-    public static void init(HexData hexData) {
+    public static void init(AssimilationPlugin assimilation) {
 
         registerCommand("rules", "provides info on specific configurations for this server", (args, player) -> {
             player.sendMessage("max interaction rate: 1/sec");
@@ -52,7 +52,7 @@ public class ClientCommands {
                 return;
             }
 
-            GameUtils.killTiles(player.team(), hexData);
+            GameUtils.killTiles(player.team(), assimilation);
             player.unit().kill();
         });
 
@@ -62,30 +62,30 @@ public class ClientCommands {
                 return;
             }
 
-            GameUtils.killTiles(player.team(), hexData);
+            GameUtils.killTiles(player.team(), assimilation);
             player.unit().kill();
             player.team(Team.green);
         });
 
         registerCommand("hexes", "Dispay the number of hexes you have captured.", (args, player) -> {
 
-            player.sendMessage("[lightgray]Your team has captured[accent] " + hexData.getControlled(player).size + "[] hexes.");
+            player.sendMessage("[lightgray]Your team has captured[accent] " + assimilation.hexData.getControlled(player).size + "[] hexes.");
         });
 
         registerCommand("leaderboard", "Display the leaderboard", (args, player) -> {
-            player.sendMessage(UI.getLeaderboard(hexData));
+            player.sendMessage(UI.getLeaderboard(assimilation));
         });
 
         registerCommand("hexstatus", "Get hex status at your position.", (args, player) -> {
-            Hex hex = hexData.data(player).location;
+            Hex hex = assimilation.hexData.data(player).location;
             if(hex != null){
                 hex.updateController();
                 StringBuilder builder = new StringBuilder();
                 builder.append("| [lightgray]Hex #").append(hex.id).append("[]\n");
-                builder.append("| [lightgray]Owner:[] ").append(hex.controller != null && hexData.getPlayer(hex.controller) != null ? hexData.getPlayer(hex.controller).name : "<none>").append("\n");
+                builder.append("| [lightgray]Owner:[] ").append(hex.controller != null && assimilation.hexData.getPlayer(hex.controller) != null ? assimilation.hexData.getPlayer(hex.controller).name : "<none>").append("\n");
                 for(Teams.TeamData data : state.teams.getActive()){
                     if(hex.getProgressPercent(data.team) > 0){
-                        builder.append("|> [accent]").append(hexData.getPlayer(data.team).name).append("[lightgray]: ").append((int)hex.getProgressPercent(data.team)).append("% captured\n");
+                        builder.append("|> [accent]").append(assimilation.hexData.getPlayer(data.team).name).append("[lightgray]: ").append((int)hex.getProgressPercent(data.team)).append("% captured\n");
                     }
                 }
                 player.sendMessage(builder.toString());

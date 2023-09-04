@@ -11,6 +11,7 @@ import assimilation.hex.Map;
 import assimilation.utils.Utils;
 import assimilation.utils.GameUtils;
 import mindustry.content.*;
+import mindustry.core.GameState;
 import mindustry.core.GameState.*;
 import mindustry.core.NetServer.*;
 import mindustry.core.Version;
@@ -67,6 +68,53 @@ public class AssimilationPlugin extends Plugin implements ApplicationListener {
         AssimilationEvents.init(this);
         this.config();
 
+        Events.run(Trigger.update, () -> {
+            if(GameUtils.isActive()){
+                hexData.updateStats();
+
+                for(Player player : Groups.player){
+                    if(player.team() != Team.derelict && player.team().cores().isEmpty()){
+                        player.clearUnit();
+                        GameUtils.killTiles(player.team(), this);
+                        Call.sendMessage("[yellow](!)[] [accent]" + player.name + "[lightgray] has been eliminated![yellow] (!)");
+                        Call.infoMessage(player.con, "Your cores have been destroyed. You are defeated.");
+                        player.team(Team.derelict);
+                    }
+
+                    if(player.team() == Team.derelict){
+                        player.clearUnit();
+                    }else if(hexData.getControlled(player).size == hexData.hexes().size){
+                        GameUtils.endGame(this);
+                        break;
+                    }
+                }
+
+                if(interval.get(timerBoard, leaderboardTime)){
+                    Call.infoToast(UI.getLeaderboard(this), 15f);
+                }
+
+                if(interval.get(timerUpdate, updateTime)){
+                    hexData.updateControl();
+                }
+
+                if(interval.get(timerWinCheck, 60 * 2)){
+                    Seq<Player> players = hexData.getLeaderboard();
+                    if(!players.isEmpty() && hexData.getControlled(players.first()).size >= winCondition && players.size > 1 && hexData.getControlled(players.get(1)).size <= 1){
+                        GameUtils.endGame(this);
+                    }
+                }
+
+                counter += Time.delta;
+
+                //kick everyone and restart w/ the script
+                if(counter > roundTime && !restarting){
+                    GameUtils.endGame(this);
+                }
+            }else{
+                counter = 0;
+            }
+        });
+
         TeamAssigner prev = netServer.assigner;
         netServer.assigner = (player, players) -> {
             Seq<Player> arr = Seq.with(players);
@@ -94,7 +142,10 @@ public class AssimilationPlugin extends Plugin implements ApplicationListener {
         allowCustomClients.set(true);
         antiSpam.set(true);
         interactRateWindow.set(1);
-        interactRateLimit.set(1);
+        interactRateLimit.set(25);
+        interactRateKick.set(50);
+        messageSpamKick.set(5);
+        packetSpamLimit.set(500);
         messageRateLimit.set(1);
         enableVotekick.set(false);
         // startCommands.set("hexed");
@@ -163,7 +214,7 @@ public class AssimilationPlugin extends Plugin implements ApplicationListener {
 
         info("start tick");
 
-        TickManager.run(this);
+        // TickManager.run(this);
 
         info("end tick");
     }
@@ -184,12 +235,32 @@ public class AssimilationPlugin extends Plugin implements ApplicationListener {
 */
 
         PluginVars.clientCommands = handler;
-        ClientCommands.init(hexData);
+        ClientCommands.init(this);
     }
 
     @Override
     //run code that shuts the server down
     public void dispose(){
 
+    }
+
+    public void initHexed() {
+
+        if(!state.is(GameState.State.menu)){
+            Log.err("Stop the server first.");
+            return;
+        }
+
+        this.hexData = new HexData();
+
+        logic.reset();
+        Log.info("Generating map...");
+        Map generator = new Map();
+        world.loadGenerator(Hex.size, Hex.size, generator);
+        hexData.initHexes(generator.getHex());
+        Utils.info("Map generated.");
+        this.setRules();
+        logic.play();
+        netServer.openServer();
     }
 }

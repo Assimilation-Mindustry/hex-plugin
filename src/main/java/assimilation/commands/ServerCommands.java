@@ -30,22 +30,8 @@ public class ServerCommands {
         });
 
         serverCommands.register("hexed", "Begin hosting with the Hexed gamemode.", args -> {
-            if(!state.is(GameState.State.menu)){
-                Log.err("Stop the server first.");
-                return;
-            }
 
-            HexData hexData = new HexData();
-
-            logic.reset();
-            Log.info("Generating map...");
-            Map generator = new Map();
-            world.loadGenerator(Hex.size, Hex.size, generator);
-            hexData.initHexes(generator.getHex());
-            Utils.info("Map generated.");
-            assimilation.setRules();
-            logic.play();
-            netServer.openServer();
+            assimilation.initHexed();
         });
 
         serverCommands.register("time", "Get the time the ground has gone for.", args -> {

@@ -17,7 +17,7 @@ public class TickManager {
         for(Player player : Groups.player){
             if(player.team() != Team.derelict && player.team().cores().isEmpty()){
                 player.clearUnit();
-                GameUtils.killTiles(player.team(), assimilation.hexData);
+                GameUtils.killTiles(player.team(), assimilation);
                 Call.sendMessage("[yellow](!)[] [accent]" + player.name + "[lightgray] has been eliminated![yellow] (!)");
                 Call.infoMessage(player.con, "Your cores have been destroyed. You are defeated.");
                 player.team(Team.derelict);
@@ -30,7 +30,7 @@ public class TickManager {
         }
 
         if(assimilation.interval.get(AssimilationPlugin.timerBoard, AssimilationPlugin.leaderboardTime)){
-            Call.infoToast(UI.getLeaderboard(assimilation.hexData), 15f);
+            Call.infoToast(UI.getLeaderboard(assimilation), 15f);
         }
 
         if(assimilation.interval.get(AssimilationPlugin.timerUpdate, AssimilationPlugin.updateTime)){

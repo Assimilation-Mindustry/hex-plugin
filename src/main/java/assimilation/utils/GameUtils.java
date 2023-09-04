@@ -22,9 +22,9 @@ import static mindustry.Vars.*;
 
 public class GameUtils {
 
-    public static void killTiles(Team team, HexData hexData){
-        hexData.data(team).dying = true;
-        Time.runTask(8f, () -> hexData.data(team).dying = false);
+    public static void killTiles(Team team, AssimilationPlugin assimilation){
+        assimilation.hexData.data(team).dying = true;
+        Time.runTask(8f, () -> assimilation.hexData.data(team).dying = false);
         for(int x = 0; x < world.width(); x++){
             for(int y = 0; y < world.height(); y++){
                 Tile tile = world.tile(x, y);
