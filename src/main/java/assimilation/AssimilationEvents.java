@@ -17,20 +17,7 @@ public class AssimilationEvents {
     public static void init() {
 
         Events.on(EventType.PlayerLeave.class, event -> {
-            AssimilationPlugin.info("THIS PLAYER HAS LEFT: @", event.player);
-        });
-
-        rules();
-    }
-
-    public static void rules() {
-
-        Events.on(EventType.PlayEvent.class, event -> {
-            AssimilationPlugin.info("start set rules");
-
-            // set rules
-
-            AssimilationPlugin.info("end set rules");
+            AssimilationPlugin.info("THIS PLAYER HAS LEFT: @", event.player.name());
         });
     }
 }

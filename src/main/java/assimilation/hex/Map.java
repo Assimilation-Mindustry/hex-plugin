@@ -4,7 +4,6 @@ import arc.func.Cons;
 import arc.math.Mathf;
 import arc.math.geom.Bresenham2;
 import arc.math.geom.Geometry;
-import arc.math.geom.Intersector;
 import arc.math.geom.Point2;
 import arc.struct.IntSeq;
 import arc.struct.Seq;
@@ -98,7 +97,9 @@ public class Map implements Cons<Tiles> {
             int x = Point2.x(hex.get(i));
             int y = Point2.y(hex.get(i));
             Geometry.circle(x, y, size, height, Hex.diameter, (cx, cy) -> {
-                if(this.isInsideCircle(x, y, Hex.diameter, cx, cy)){
+
+                if (this.isInsideCircle(x, y, Hex.diameter, cx, cy)) {
+
                     Tile tile = tiles.getn(cx, cy);
                     tile.setBlock(Blocks.air);
                 }
@@ -114,6 +115,15 @@ public class Map implements Cons<Tiles> {
                         Geometry.circle(cx, cy, size, height, 3, (c2x, c2y) -> tiles.getn(c2x, c2y).setBlock(Blocks.air));
                     });
                 }
+            }
+        }
+
+        for(int x = 0; x < size; x++) {
+            for (int y = 0; y < height; y++) {
+
+                Tile tile = tiles.get(x, y);
+
+
             }
         }
 

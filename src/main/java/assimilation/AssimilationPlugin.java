@@ -1,19 +1,20 @@
 package assimilation;
 
 import arc.*;
-import arc.math.*;
 import arc.struct.*;
 import arc.util.*;
+import assimilation.commands.ClientCommands;
 import assimilation.hex.HexData;
 import assimilation.hex.Hex;
 import assimilation.hex.Map;
+import assimilation.utils.Utils;
+import assimilation.utils.GameUtils;
 import mindustry.content.*;
 import mindustry.core.GameState.*;
 import mindustry.core.NetServer.*;
 import mindustry.game.EventType.*;
 import mindustry.game.*;
 import mindustry.game.Schematic.*;
-import mindustry.game.Teams.*;
 import mindustry.gen.*;
 import mindustry.mod.*;
 import mindustry.net.Packets.*;
@@ -48,13 +49,12 @@ public class AssimilationPlugin extends Plugin implements ApplicationListener {
     private final Rules rules = new Rules();
     private Interval interval = new Interval(5);
 
-    private HexData data;
+    public HexData hexData;
     private boolean restarting = false, registered = false;
 
     private Schematic coreNucleus;
     private Schematic coreShard;
     private double counter = 0f;
-    private int lastMin;
 
     @Override
     public void init() {
@@ -62,17 +62,17 @@ public class AssimilationPlugin extends Plugin implements ApplicationListener {
         AssimilationEvents.init();
         this.config();
 
-        coreNucleus = Schematics.readBase64("bXNjaAF4nE2T7W6bQBBFBzDsFwbnDfoCPFHUHwRvK0sELGw3yatXqtydPVZrLHFgdvbemWEtQV4q2S3je5R2Wrf4bblNc7xdJBzjZdpO5+tpXUSkmce3OF+kfP3eSpjW8zluw8c4z2KndfkVv9ZNqnGbxFym8XqNmzTvcTkm+vP6kXKX9RjFvOW1L7G3ZV5HXc6uwz/XyzqP23AelzjLy9PLkJ5+RgnjaRt+jNN1TSIin/L/KkAJKgINMMACBzyZe9CBHhyeFAseCqQLlVbsQE1CAwywwAFPZgAt2IMO9ODw1EGptmX+JctSbXcJNZU0wAALHEh+dUKwVR5Eo2r331mkRbLDoAeHx8BAoVPT3CReSZ39bBK0BALLHck9yAo73epykamEWgcUElqdXlHoQkda3lSTXdNuTbAh2GhQ0RHMa4YCDQUaxqIVpZvRsShCzRcy2qlmdex5KOQ6LUKW+VoV0u5qHdf9TxpUer/fc9epEIUBFjjgpdwlBEQ6JHuQfRw+juPjaNQxaMfxcXxOh5HDyGHkMHJqpJmBDS3Ygw70INs+jrXH1mPr+UN4jDxGHiOPkSfXI+2R9kh7lf4L0oNLfA==");
+        coreNucleus = Schematics.readBase64("bXNjaAF4nE2TbY6bQBBEG2yYLwzeG+QCPtEqP1g8iSyxgMDO7l49UuRMz7MS25Ifnqmu6mlAgrzsZD/171GaYV7jt+k2jPG2STjHbVgvy/UyTyJSj/1bHDcpX783EoZ5WeJ6+ujHUewwT7/i17zKrl8HMdvQX69xlfo9TudEv8wfSTvN5yjmLe99ib1N49zrdk49/Uvd5rFfT0s/xVFenv6c0tXPKKG/rKcf/XCdk4nIp/z/FKAEOxZqYIAFDniUB9CCDhyfHAsuCqwLtVbsQYWgBgZY4IBHGUADDqAFHTg+naDU2DJ/U2SpsfuEik5qYIAFDqS8KiHYVHL/rdJUXGSTBsuWgA4cHwOThzBVqDaZ76TKeTYZWhYC2y3iDmSHvZa63GRqodIBhYRGp1cUutEiy0UV6orjVizWLNa6qGhZzHuGBg0NGsaiHaUfo2NRhIo7ZPSkqmqpeTjkPi1GlvlaNdLTVbZMw5L7n/s9nzg1oTDAAge8lPuEgEGLXQdyhiPD8eg4DukYsuPRcdxKR5AjyBHkCHIapMpAQQMOoAUdyLGPR9oT64n1vAyeIE+QJ8gT5NF6rD3WHmuv1n8Bx4RLdw==");
         coreShard = Schematics.readBase64("bXNjaAF4nE2SXW7CMBAGNyT+2w136AU4UdUHA5aKFCAKSG2fevWyGSqBhCZZ+Rt7s5atbHsZLvXcRA/Xpb3dPutyFDu222E5zffT9SIicar7Nt1k8/4RxQ7XeW7L7qtOk9jtOtVlN9dLmyTPdXkU67fEc7sc2yJpX+/3tvwg3yEX+X38pZP1twE9KECBvazreOgIdAQ6GUAACWRQgIKnbHzZdONON25AT3EAAUSQQAYFKDAwvjTSo+5d7eKeYgARJJZkUCgqMLA6B3ofXPYYl1u88wgSxcxbYaWC1RKIB9oOfhZ3DP4csQQaC8QD8UA8koue6x4YQKZYwBpIbJQIJALJA37KTLGAZ2DdIZPLzCF7zr/KwFsAkWJiCpmAAnu5OwVZQVY4RGGohQEUBlAYQMFS/i3rJ3/eQEWmdKSMUZEpMkWm3BBlDuqncShFA6vaUBtqQ22oDbWhNpxGt0aHhtPwGM4R2YhsRDYSGAmMHvgD2Y4p3g==");
 
         Events.run(Trigger.update, () -> {
             if(active()){
-                data.updateStats();
+                hexData.updateStats();
 
                 for(Player player : Groups.player){
                     if(player.team() != Team.derelict && player.team().cores().isEmpty()){
                         player.clearUnit();
-                        killTiles(player.team());
+                        GameUtils.killTiles(player.team(), hexData);
                         Call.sendMessage("[yellow](!)[] [accent]" + player.name + "[lightgray] has been eliminated![yellow] (!)");
                         Call.infoMessage(player.con, "Your cores have been destroyed. You are defeated.");
                         player.team(Team.derelict);
@@ -80,28 +80,23 @@ public class AssimilationPlugin extends Plugin implements ApplicationListener {
 
                     if(player.team() == Team.derelict){
                         player.clearUnit();
-                    }else if(data.getControlled(player).size == data.hexes().size){
+                    }else if(hexData.getControlled(player).size == hexData.hexes().size){
                         endGame();
                         break;
                     }
                 }
 
-                int minsToGo = (int)(roundTime - counter) / 60 / 60;
-                if(minsToGo != lastMin){
-                    lastMin = minsToGo;
-                }
-
                 if(interval.get(timerBoard, leaderboardTime)){
-                    Call.infoToast(getLeaderboard(), 15f);
+                    Call.infoToast(UI.getLeaderboard(hexData), 15f);
                 }
 
                 if(interval.get(timerUpdate, updateTime)){
-                    data.updateControl();
+                    hexData.updateControl();
                 }
 
                 if(interval.get(timerWinCheck, 60 * 2)){
-                    Seq<Player> players = data.getLeaderboard();
-                    if(!players.isEmpty() && data.getControlled(players.first()).size >= winCondition && players.size > 1 && data.getControlled(players.get(1)).size <= 1){
+                    Seq<Player> players = hexData.getLeaderboard();
+                    if(!players.isEmpty() && hexData.getControlled(players.first()).size >= winCondition && players.size > 1 && hexData.getControlled(players.get(1)).size <= 1){
                         endGame();
                     }
                 }
@@ -120,7 +115,7 @@ public class AssimilationPlugin extends Plugin implements ApplicationListener {
         Events.on(BlockDestroyEvent.class, event -> {
             //reset last spawn times so this hex becomes vacant for a while.
             if(event.tile.block() instanceof CoreBlock){
-                Hex hex = data.getHex(event.tile.pos());
+                Hex hex = hexData.getHex(event.tile.pos());
 
                 if(hex != null){
                     //update state
@@ -131,17 +126,25 @@ public class AssimilationPlugin extends Plugin implements ApplicationListener {
         });
 
         Events.on(PlayerLeave.class, event -> {
-            if(active() && event.player.team() != Team.derelict){
-                killTiles(event.player.team());
-            }
+//            if(active() && event.player.team() != Team.derelict){
+//                killTiles(event.player.team());
+//            }
         });
 
         Events.on(PlayerJoin.class, event -> {
             if(!active() || event.player.team() == Team.derelict) return;
 
+            // If team is still alive
+            if (event.player.team().active()) {
+
+                // Let the player stay on the team
+                return;
+            }
+
             // Find a viable hex furthest from the center
 
-            Seq<Hex> hexes = data.hexes().copy();
+            Seq<Hex> hexes = hexData.hexes().copy();
+            hexes.shuffle();
 
             Hex bestHex = null;
             int bestRange = 0;
@@ -167,10 +170,10 @@ public class AssimilationPlugin extends Plugin implements ApplicationListener {
             }
 
             loadout(event.player, bestHex.x, bestHex.y);
-            Core.app.post(() -> data.data(event.player).chosen = false);
+            Core.app.post(() -> hexData.data(event.player).chosen = false);
             bestHex.findController();
 
-            data.data(event.player).lastMessage.reset();
+            hexData.data(event.player).lastMessage.reset();
         });
 
         Events.on(HexData.ProgressIncreaseEvent.class, event -> updateText(event.player));
@@ -186,8 +189,8 @@ public class AssimilationPlugin extends Plugin implements ApplicationListener {
             if(active()){
                 //pick first inactive team
                 for(Team team : Team.all){
-                    if(team.id > 5 && !team.active() && !arr.contains(p -> p.team() == team) && !data.data(team).dying && !data.data(team).chosen){
-                        data.data(team).chosen = true;
+                    if(team.id > 5 && !team.active() && !arr.contains(p -> p.team() == team) && !hexData.data(team).dying && !hexData.data(team).chosen){
+                        hexData.data(team).chosen = true;
                         return team;
                     }
                 }
@@ -202,19 +205,25 @@ public class AssimilationPlugin extends Plugin implements ApplicationListener {
     public void config() {
         info("config");
 
-        serverName.set("[purple]Assimilation [grey]> [red]Hex [grey]> [white]Serpulo");
-        desc.set("Conquer every [purple]hex [grey]on the map");
-        motd.set("Welcome to [red]Assimilation!\n[white]your goal is to convert all cores under your control. Good Luck.");
+        serverName.set("\uF869 [red]\uE861 [purple]Assimilation [grey]> [red]Hex [white]PVP [grey]> [white]Serpulo");
+        desc.set("Conquer every [red]hex [grey]on the map");
+        motd.set("Welcome to [purple]Assimilation [red]Hex [white]PVP!\n[white]your goal is to convert all cores under your control. Good Luck.");
         allowCustomClients.set(true);
-        interactRateLimit.set(100);
-        messageRateLimit.set(50);
         antiSpam.set(true);
 
+        // allows 1 interaction every 1 second
+
+        interactRateWindow.set(1);
+        interactRateLimit.set(1);
+
+        messageRateLimit.set(1);
+        enableVotekick.set(false);
+        // startCommands.set("hexed");
 
     }
 
     void updateText(Player player){
-        HexData.HexTeam team = data.data(player);
+        HexData.HexTeam team = hexData.data(player);
 
         StringBuilder message = new StringBuilder("[white]Hex #" + team.location.id + "\n");
 
@@ -228,8 +237,8 @@ public class AssimilationPlugin extends Plugin implements ApplicationListener {
             }
         }else if(team.location.controller == player.team()){
             message.append("[yellow][[Captured]");
-        }else if(team.location != null && team.location.controller != null && data.getPlayer(team.location.controller) != null){
-            message.append("[#").append(team.location.controller.color).append("]Captured by ").append(data.getPlayer(team.location.controller).name);
+        }else if(team.location != null && team.location.controller != null && hexData.getPlayer(team.location.controller) != null){
+            message.append("[#").append(team.location.controller.color).append("]Captured by ").append(hexData.getPlayer(team.location.controller).name);
         }else{
             message.append("<Unknown>");
         }
@@ -242,8 +251,7 @@ public class AssimilationPlugin extends Plugin implements ApplicationListener {
         state.rules.pvp = true;
         state.rules.tags.put("hexed", "true");
         state.rules.canGameOver = false;
-        state.rules.polygonCoreProtection = true;
-        state.rules.loadout = ItemStack.list(Items.copper, 1000, Items.lead, 1000, Items.graphite, 150, Items.metaglass, 150, Items.silicon, 150, Items.plastanium, 0);
+        state.rules.loadout = ItemStack.list(Items.copper, 1200, Items.lead, 1000, Items.graphite, 150, Items.metaglass, 150, Items.silicon, 150, Items.titanium, 150);
         state.rules.buildSpeedMultiplier = 1.5f;
         state.rules.unitDamageMultiplier = .5f;
         state.rules.unitHealthMultiplier = .5f;
@@ -251,25 +259,23 @@ public class AssimilationPlugin extends Plugin implements ApplicationListener {
         state.rules.blockHealthMultiplier = 1f;
         state.rules.coreIncinerates = true;
         state.rules.damageExplosions = false;
-        state.rules.disableOutsideArea = false;
-        state.rules.enemyCoreBuildRadius = .100f;
+        state.rules.disableOutsideArea = true;
+        state.rules.borderDarkness = true;
         state.rules.ghostBlocks = true;
         state.rules.hideBannedBlocks = true;
         state.rules.logicUnitBuild = false;
         state.rules.mission = "Capture every hex";
         state.rules.modeName = "Assimilate";
         // state.rules.onlyDepositCore = true;
-        state.rules.reactorExplosions = false;
+        state.rules.reactorExplosions = true;
         state.rules.unitCap = 24;
         state.rules.unitCrashDamageMultiplier = .0f;
         state.rules.unitCapVariable = true;
         // state.rules.bannedBlocks = new ObjectSet<>("");
         state.rules.coreCapture = true;
         state.rules.pvpAutoPause = false;
-
-        // temp
-
-        state.rules.borderDarkness = false;
+        state.rules.enemyCoreBuildRadius = Hex.radius * 8;
+        state.rules.defaultTeam = Team.green;
     }
 
     @Override
@@ -280,13 +286,13 @@ public class AssimilationPlugin extends Plugin implements ApplicationListener {
                 return;
             }
 
-            data = new HexData();
+            hexData = new HexData();
 
             logic.reset();
             Log.info("Generating map...");
             Map generator = new Map();
             world.loadGenerator(Hex.size, Hex.size, generator);
-            data.initHexes(generator.getHex());
+            hexData.initHexes(generator.getHex());
             info("Map generated.");
 //            state.rules = rules.copy();
             this.setRules();
@@ -305,70 +311,34 @@ public class AssimilationPlugin extends Plugin implements ApplicationListener {
 
     @Override
     public void registerClientCommands(CommandHandler handler){
+
         if(registered) return;
         registered = true;
 
-        handler.<Player>register("spectate", "Enter spectator mode. This destroys your base.", (args, player) -> {
-            if(player.team() == Team.derelict){
-                player.sendMessage("[scarlet]You're already spectating.");
-            }else{
-                killTiles(player.team());
-                player.unit().kill();
-                player.team(Team.derelict);
-            }
-        });
-
-        handler.<Player>register("captured", "Dispay the number of hexes you have captured.", (args, player) -> {
-            if(player.team() == Team.derelict){
-                player.sendMessage("[scarlet]You're spectating.");
-            }else{
-                player.sendMessage("[lightgray]You've captured[accent] " + data.getControlled(player).size + "[] hexes.");
-            }
-        });
-
-        handler.<Player>register("leaderboard", "Display the leaderboard", (args, player) -> {
-            player.sendMessage(getLeaderboard());
-        });
-
-        handler.<Player>register("hexstatus", "Get hex status at your position.", (args, player) -> {
-            Hex hex = data.data(player).location;
-            if(hex != null){
-                hex.updateController();
-                StringBuilder builder = new StringBuilder();
-                builder.append("| [lightgray]Hex #").append(hex.id).append("[]\n");
-                builder.append("| [lightgray]Owner:[] ").append(hex.controller != null && data.getPlayer(hex.controller) != null ? data.getPlayer(hex.controller).name : "<none>").append("\n");
-                for(TeamData data : state.teams.getActive()){
-                    if(hex.getProgressPercent(data.team) > 0){
-                        builder.append("|> [accent]").append(this.data.getPlayer(data.team).name).append("[lightgray]: ").append((int)hex.getProgressPercent(data.team)).append("% captured\n");
-                    }
-                }
-                player.sendMessage(builder.toString());
-            }else{
-                player.sendMessage("[scarlet]No hex found.");
-            }
-        });
+        PluginVars.clientCommands = handler;
+        ClientCommands.init(hexData);
     }
 
     void endGame(){
         if(restarting) return;
 
         restarting = true;
-        Seq<Player> players = data.getLeaderboard();
+        Seq<Player> players = hexData.getLeaderboard();
         StringBuilder builder = new StringBuilder();
         for(int i = 0; i < players.size && i < 3; i++){
-            if(data.getControlled(players.get(i)).size > 1){
+            if(hexData.getControlled(players.get(i)).size > 1){
                 builder.append("[yellow]").append(i + 1).append(".[accent] ").append(players.get(i).name)
-                        .append("[lightgray] (x").append(data.getControlled(players.get(i)).size).append(")[]\n");
+                        .append("[lightgray] (x").append(hexData.getControlled(players.get(i)).size).append(")[]\n");
             }
         }
 
         if(!players.isEmpty()){
-            boolean dominated = data.getControlled(players.first()).size == data.hexes().size;
+            boolean dominated = hexData.getControlled(players.first()).size == hexData.hexes().size;
 
             for(Player player : Groups.player){
                 Call.infoMessage(player.con, "[accent]--ROUND OVER--\n\n[lightgray]"
                         + (player == players.first() ? "[accent]You[] were" : "[yellow]" + players.first().name + "[lightgray] was") +
-                        " victorious, with [accent]" + data.getControlled(players.first()).size + "[lightgray] hexes conquered." + (dominated ? "" : "\n\nFinal scores:\n" + builder));
+                        " victorious, with [accent]" + hexData.getControlled(players.first()).size + "[lightgray] hexes conquered." + (dominated ? "" : "\n\nFinal scores:\n" + builder));
             }
         }
 
@@ -377,32 +347,6 @@ public class AssimilationPlugin extends Plugin implements ApplicationListener {
             netServer.kickAll(KickReason.serverRestarting);
             Time.runTask(5f, () -> System.exit(2));
         });
-    }
-
-    String getLeaderboard(){
-        StringBuilder builder = new StringBuilder();
-        builder.append("[accent]Leaderboard\n[scarlet]").append(lastMin).append("[lightgray] mins. remaining\n\n");
-        int count = 0;
-        for(Player player : data.getLeaderboard()){
-            builder.append("[yellow]").append(++count).append(".[white] ")
-                    .append(player.name).append("[orange] (").append(data.getControlled(player).size).append(" hexes)\n[white]");
-
-            if(count > 4) break;
-        }
-        return builder.toString();
-    }
-
-    void killTiles(Team team){
-        data.data(team).dying = true;
-        Time.runTask(8f, () -> data.data(team).dying = false);
-        for(int x = 0; x < world.width(); x++){
-            for(int y = 0; y < world.height(); y++){
-                Tile tile = world.tile(x, y);
-                if(tile.build != null && tile.team() == team){
-                    Time.run(Mathf.random(60f * 6), tile.build::kill);
-                }
-            }
-        }
     }
 
     void loadout(Player player, int x, int y){
