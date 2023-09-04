@@ -27,36 +27,6 @@ public class AssimilationEvents {
             Utils.info("THIS PLAYER HAS LEFT: @", event.player.name());
         });
 
-        Events.run(EventType.Trigger.update, () -> {
-
-            assimilation.hexData.updateStats();
-
-            for(Player player : Groups.player){
-                if(player.team() != Team.derelict && player.team().cores().isEmpty()){
-                    player.clearUnit();
-                    GameUtils.killTiles(player.team(), assimilation.hexData);
-                    Call.sendMessage("[yellow](!)[] [accent]" + player.name + "[lightgray] has been eliminated![yellow] (!)");
-                    Call.infoMessage(player.con, "Your cores have been destroyed. You are defeated.");
-                    player.team(Team.derelict);
-                }
-
-                if (assimilation.hexData.getControlled(player).size == assimilation.hexData.hexes().size){
-                    GameUtils.endGame(assimilation);
-                    break;
-                }
-            }
-
-            if(assimilation.interval.get(AssimilationPlugin.timerBoard, AssimilationPlugin.leaderboardTime)){
-                Call.infoToast(UI.getLeaderboard(assimilation.hexData), 15f);
-            }
-
-            if(assimilation.interval.get(AssimilationPlugin.timerUpdate, AssimilationPlugin.updateTime)){
-                assimilation.hexData.updateControl();
-            }
-
-            assimilation.counter += Time.delta;
-        });
-
         Events.on(EventType.BlockDestroyEvent.class, event -> {
             //reset last spawn times so this hex becomes vacant for a while.
             if(event.tile.block() instanceof CoreBlock){
@@ -71,16 +41,25 @@ public class AssimilationEvents {
         });
 
         Events.on(EventType.PlayerLeave.class, event -> {
-//            if(active() && event.player.team() != Team.derelict){
+//            if(AssimilationPlugin.isActive() && event.player.team() != Team.derelict){
 //                killTiles(event.player.team());
 //            }
 
 
         });
 
+//        Events.on(EventType.WithdrawEvent.class, event -> {
+//
+//            event.preventDefault();
+//        });
+
         Events.on(EventType.PlayerJoin.class, event -> {
+
+            if (!GameUtils.isActive()) return;
+
             if(event.player.team() == Team.green) return;
 
+            Utils.info("Player joined. Is team active: " + event.player.team().active());
             // If team is still alive
             if (event.player.team().active()) {
 

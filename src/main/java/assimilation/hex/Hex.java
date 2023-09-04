@@ -23,7 +23,6 @@ public class Hex{
     public final static int radius = diameter / 2;
     public final static int spacing = diameter + 10;
     public final static int itemRequirement = 210;
-
     public final int id;
     public final int x, y;
     public final float wx, wy;

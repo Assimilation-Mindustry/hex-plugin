@@ -13,6 +13,7 @@ import assimilation.utils.GameUtils;
 import mindustry.content.*;
 import mindustry.core.GameState.*;
 import mindustry.core.NetServer.*;
+import mindustry.core.Version;
 import mindustry.game.EventType.*;
 import mindustry.game.*;
 import mindustry.game.Schematic.*;
@@ -61,12 +62,16 @@ public class AssimilationPlugin extends Plugin implements ApplicationListener {
     @Override
     public void init() {
 
+        Version.build = -1;
+
         AssimilationEvents.init(this);
         this.config();
 
         TeamAssigner prev = netServer.assigner;
         netServer.assigner = (player, players) -> {
             Seq<Player> arr = Seq.with(players);
+
+            if (!GameUtils.isActive()) return prev.assign(player, players);
 
             //pick first inactive team
             for(Team team : Team.all){
@@ -88,7 +93,8 @@ public class AssimilationPlugin extends Plugin implements ApplicationListener {
         motd.set("Welcome to [purple]Assimilation [red]Hex [white]PVP!\n[white]your goal is to convert all cores under your control. Good Luck.");
         allowCustomClients.set(true);
         antiSpam.set(true);
-
+        interactRateWindow.set(1);
+        interactRateLimit.set(1);
         messageRateLimit.set(1);
         enableVotekick.set(false);
         // startCommands.set("hexed");
@@ -139,7 +145,7 @@ public class AssimilationPlugin extends Plugin implements ApplicationListener {
         state.rules.logicUnitBuild = false;
         state.rules.mission = "Capture every hex";
         state.rules.modeName = "Assimilate";
-        state.rules.onlyDepositCore = true;
+        // state.rules.onlyDepositCore = true;
         state.rules.reactorExplosions = true;
         state.rules.unitCap = 24;
         state.rules.unitCrashDamageMultiplier = .0f;
@@ -149,6 +155,17 @@ public class AssimilationPlugin extends Plugin implements ApplicationListener {
         state.rules.pvpAutoPause = false;
         state.rules.enemyCoreBuildRadius = Hex.radius * 8;
         state.rules.defaultTeam = Team.green;
+    }
+
+    @Override
+    //run code that needs to be run every tick
+    public void update(){
+
+        info("start tick");
+
+        TickManager.run(this);
+
+        info("end tick");
     }
 
     @Override
@@ -168,5 +185,11 @@ public class AssimilationPlugin extends Plugin implements ApplicationListener {
 
         PluginVars.clientCommands = handler;
         ClientCommands.init(hexData);
+    }
+
+    @Override
+    //run code that shuts the server down
+    public void dispose(){
+
     }
 }

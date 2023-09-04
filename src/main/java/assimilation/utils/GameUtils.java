@@ -7,6 +7,7 @@ import assimilation.AssimilationPlugin;
 import assimilation.PluginVars;
 import assimilation.hex.HexData;
 import mindustry.content.Blocks;
+import mindustry.core.GameState;
 import mindustry.game.Schematic;
 import mindustry.game.Team;
 import mindustry.gen.Call;
@@ -87,5 +88,9 @@ public class GameUtils {
                 }
             }
         });
+    }
+
+    public static boolean isActive() {
+        return state.rules.tags.getBool("hexed") && !state.is(GameState.State.menu);
     }
 }
