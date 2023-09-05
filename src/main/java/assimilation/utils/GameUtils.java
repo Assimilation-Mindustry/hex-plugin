@@ -5,7 +5,7 @@ import arc.struct.Seq;
 import arc.util.Time;
 import assimilation.AssimilationPlugin;
 import assimilation.PluginVars;
-import assimilation.hex.HexData;
+import assimilation.hex.HexLogic;
 import mindustry.content.Blocks;
 import mindustry.core.GameState;
 import mindustry.game.Schematic;
@@ -22,9 +22,9 @@ import static mindustry.Vars.*;
 
 public class GameUtils {
 
-    public static void killTiles(Team team, AssimilationPlugin assimilation){
-        assimilation.hexData.data(team).dying = true;
-        Time.runTask(8f, () -> assimilation.hexData.data(team).dying = false);
+    public static void killTiles(Team team){
+        HexLogic.getTeamHexTeam(team).dying = true;
+        Time.runTask(8f, () -> HexLogic.getTeamHexTeam(team).dying = false);
         for(int x = 0; x < world.width(); x++){
             for(int y = 0; y < world.height(); y++){
                 Tile tile = world.tile(x, y);
@@ -39,22 +39,22 @@ public class GameUtils {
         if(assimilation.restarting) return;
 
         assimilation.restarting = true;
-        Seq<Player> players = assimilation.hexData.getLeaderboard();
+        Seq<Player> players = HexLogic.getLeaderboard();
         StringBuilder builder = new StringBuilder();
         for(int i = 0; i < players.size && i < 3; i++){
-            if(assimilation.hexData.getControlled(players.get(i)).size > 1){
+            if(HexLogic.getControlled(players.get(i)).size > 1){
                 builder.append("[yellow]").append(i + 1).append(".[accent] ").append(players.get(i).name)
-                        .append("[lightgray] (x").append(assimilation.hexData.getControlled(players.get(i)).size).append(")[]\n");
+                        .append("[lightgray] (x").append(HexLogic.getControlled(players.get(i)).size).append(")[]\n");
             }
         }
 
         if(!players.isEmpty()){
-            boolean dominated = assimilation.hexData.getControlled(players.first()).size == assimilation.hexData.hexes().size;
+            boolean dominated = HexLogic.getControlled(players.first()).size == HexLogic.hexes().size;
 
             for(Player player : Groups.player){
                 Call.infoMessage(player.con, "[accent]--ROUND OVER--\n\n[lightgray]"
                         + (player == players.first() ? "[accent]You[] were" : "[yellow]" + players.first().name + "[lightgray] was") +
-                        " victorious, with [accent]" + assimilation.hexData.getControlled(players.first()).size + "[lightgray] hexes conquered." + (dominated ? "" : "\n\nFinal scores:\n" + builder));
+                        " victorious, with [accent]" + HexLogic.getControlled(players.first()).size + "[lightgray] hexes conquered." + (dominated ? "" : "\n\nFinal scores:\n" + builder));
             }
         }
 

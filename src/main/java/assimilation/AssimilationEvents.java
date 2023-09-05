@@ -3,22 +3,16 @@ package assimilation;
 import arc.Core;
 import arc.Events;
 import arc.struct.Seq;
-import arc.util.Time;
 import assimilation.hex.Hex;
-import assimilation.hex.HexData;
+import assimilation.hex.HexLogic;
+import assimilation.hex.HexTeam;
 import assimilation.hex.Map;
 import assimilation.utils.GameUtils;
 import assimilation.utils.Utils;
-import mindustry.content.Items;
 import mindustry.game.EventType;
 import mindustry.game.Team;
 import mindustry.gen.Call;
-import mindustry.gen.Groups;
-import mindustry.gen.Player;
-import mindustry.type.ItemStack;
 import mindustry.world.blocks.storage.CoreBlock;
-
-import static mindustry.Vars.state;
 
 public class AssimilationEvents {
     public static void init(AssimilationPlugin assimilation) {
@@ -30,7 +24,7 @@ public class AssimilationEvents {
         Events.on(EventType.BlockDestroyEvent.class, event -> {
             //reset last spawn times so this hex becomes vacant for a while.
             if(event.tile.block() instanceof CoreBlock){
-                Hex hex = assimilation.hexData.getHex(event.tile.pos());
+                Hex hex = HexLogic.getHex(event.tile.pos());
 
                 if(hex != null){
                     //update state
@@ -56,12 +50,16 @@ public class AssimilationEvents {
         Events.on(EventType.PlayerJoin.class, event -> {
 
             if (!GameUtils.isActive()) return;
-
             if(event.player.team() == Team.green) return;
 
-            Utils.info("Player joined. Is team active: " + event.player.team().active());
-            // If team is still alive
-            if (event.player.team().active()) {
+//            Utils.info("Player joined. Is team active: " + event.player.team().cores().isEmpty());
+//            Utils.info("Player team core " + event.player.team().core());
+
+            HexTeam existingHexTeam = HexLogic.playersByHexTeam.get(event.player.id);
+            Utils.info("Player joined, team: " + existingHexTeam);
+
+            // If they already have a hex team
+            if (existingHexTeam == null) {
 
                 // Let the player stay on the team
                 return;
@@ -69,7 +67,7 @@ public class AssimilationEvents {
 
             // Find a viable hex furthest from the center
 
-            Seq<Hex> hexes = assimilation.hexData.hexes().copy();
+            Seq<Hex> hexes = HexLogic.hexes().copy();
             hexes.shuffle();
 
             Hex bestHex = null;
@@ -91,21 +89,30 @@ public class AssimilationEvents {
 
                 Call.infoMessage(event.player.con, "There are currently no viable hexes available.\nAssigning into spectator mode.");
                 event.player.unit().kill();
-                event.player.team(Team.derelict);
+                event.player.team(Team.green);
                 return;
             }
 
             GameUtils.loadout(event.player, bestHex.x, bestHex.y);
-            Core.app.post(() -> assimilation.hexData.data(event.player).chosen = false);
+
+            HexTeam hexTeam = new HexTeam(event.player.team());
+            hexTeam.addPlayer(event.player);
+
+            Core.app.post(() -> {
+
+                HexLogic.teamData[hexTeam.teamId].chosen = false;
+            });
             bestHex.findController();
 
-            assimilation.hexData.data(event.player).lastMessage.reset();
+            hexTeam.lastMessage.reset();
         });
 
-        Events.on(HexData.ProgressIncreaseEvent.class, event -> assimilation.updateText(event.player));
+        Events.on(HexLogic.HexCaptureEvent.class, event -> {
 
-        Events.on(HexData.HexCaptureEvent.class, event -> assimilation.updateText(event.player));
+        });
 
-        Events.on(HexData.HexMoveEvent.class, event -> assimilation.updateText(event.player));
+        Events.on(HexLogic.HexMoveEvent.class, event -> {
+
+        });
     }
 }

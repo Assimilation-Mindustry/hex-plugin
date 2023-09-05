@@ -2,14 +2,8 @@ package assimilation.commands;
 
 import arc.util.Log;
 import assimilation.AssimilationPlugin;
-import assimilation.hex.Hex;
-import assimilation.hex.HexData;
-import assimilation.hex.Map;
-import assimilation.utils.Utils;
-import mindustry.core.GameState;
 
 import static assimilation.PluginVars.serverCommands;
-import static mindustry.Vars.*;
 
 public class ServerCommands {
 
