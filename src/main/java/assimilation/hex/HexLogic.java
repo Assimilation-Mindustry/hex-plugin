@@ -109,15 +109,16 @@ public class HexLogic {
         return hexPos.get(position);
     }
 
-    public static HexTeam getTeamHexTeam(Team team){
+    public static @Nullable HexTeam getTeamHexTeam(Team team){
         if(teamData[team.id] == null) {
 
-            throw new Error("no hexTeam found for team: " + team.name);
+            return null;
         }
+
         return teamData[team.id];
     }
 
-    public static HexTeam getPlayerHexTeam(Player player){
+    public static @Nullable HexTeam getPlayerHexTeam(Player player){
         return getTeamHexTeam(player.team());
     }
 

@@ -7,6 +7,7 @@ import assimilation.commands.ClientCommands;
 import assimilation.commands.ServerCommands;
 import assimilation.hex.HexLogic;
 import assimilation.hex.Hex;
+import assimilation.hex.HexTeam;
 import assimilation.hex.Map;
 import assimilation.utils.Utils;
 import assimilation.utils.GameUtils;
@@ -68,7 +69,6 @@ public class AssimilationPlugin extends Plugin implements ApplicationListener {
 
                 for(Player player : Groups.player){
 
-                    Utils.info("hexed team " + HexLogic.playersByHexTeam.get(player.id));
                     if (HexLogic.playersByHexTeam.get(player.id) == null) {
 
                         continue;
@@ -118,17 +118,33 @@ public class AssimilationPlugin extends Plugin implements ApplicationListener {
 
         TeamAssigner prev = netServer.assigner;
         netServer.assigner = (player, players) -> {
-            Seq<Player> arr = Seq.with(players);
+            Seq<Player> playerSeq = Seq.with(players);
 
             if (!GameUtils.isActive()) return prev.assign(player, players);
 
-            //pick first inactive team
-            for(Team team : Team.all){
-                if(team.id > 5 && !team.active() && !arr.contains(p -> p.team() == team) && !HexLogic.getTeamHexTeam(team).dying && !HexLogic.getTeamHexTeam(team).chosen){
-                    HexLogic.getTeamHexTeam(team).chosen = true;
-                    return team;
-                }
+            // Try to put them back in the team they came from, if they had one
+            HexTeam playerHexTeam = HexLogic.playersByHexTeam.get(player.id);
+            Utils.info("returning team " + playerHexTeam);
+            if (playerHexTeam != null) {
+
+                return playerHexTeam.team;
             }
+
+            //pick first inactive team
+            for(Team team : Team.all) {
+                if (team.id <= 5) continue;
+                if (team.active()) continue;
+                if (playerSeq.contains(p -> p.team().id == team.id)) continue;
+
+                HexTeam hexTeam = HexLogic.getTeamHexTeam(team);
+                if (hexTeam != null && !hexTeam.dying) continue;
+
+                hexTeam = new HexTeam(team);
+                hexTeam.addPlayer(player);
+
+                return team;
+            }
+
             Call.infoMessage(player.con, "There are currently no empty hex spaces available.\nAssigning into spectator mode.");
             return Team.derelict;
         };

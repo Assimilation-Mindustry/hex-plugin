@@ -59,52 +59,13 @@ public class AssimilationEvents {
             Utils.info("Player joined, team: " + existingHexTeam);
 
             // If they already have a hex team
-            if (existingHexTeam == null) {
+            if (existingHexTeam != null) {
 
                 // Let the player stay on the team
                 return;
             }
 
-            // Find a viable hex furthest from the center
 
-            Seq<Hex> hexes = HexLogic.hexes().copy();
-            hexes.shuffle();
-
-            Hex bestHex = null;
-            int bestRange = 0;
-
-            for (Hex hex : hexes) {
-
-                if (hex.controller != null) continue;
-                if (!hex.spawnTime.get()) continue;
-
-                int range = Utils.rangeXY(hex.x, hex.y, Map.size / 2, Map.size / 2);
-                if (range < bestRange) continue;
-
-                bestHex = hex;
-                bestRange = range;
-            }
-
-            if (bestHex == null) {
-
-                Call.infoMessage(event.player.con, "There are currently no viable hexes available.\nAssigning into spectator mode.");
-                event.player.unit().kill();
-                event.player.team(Team.green);
-                return;
-            }
-
-            GameUtils.loadout(event.player, bestHex.x, bestHex.y);
-
-            HexTeam hexTeam = new HexTeam(event.player.team());
-            hexTeam.addPlayer(event.player);
-
-            Core.app.post(() -> {
-
-                HexLogic.teamData[hexTeam.teamId].chosen = false;
-            });
-            bestHex.findController();
-
-            hexTeam.lastMessage.reset();
         });
 
         Events.on(HexLogic.HexCaptureEvent.class, event -> {
